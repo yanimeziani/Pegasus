@@ -8,22 +8,34 @@ plugins {
 
 android {
     namespace = "org.dragun.pegasus"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.dragun.pegasus"
         minSdk = 28
-        targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0-alpha"
+        targetSdk = 36
+        versionCode = 2
+        versionName = "0.2.0-alpha"
+
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
 
         buildConfigField("String", "DEFAULT_API_URL", "\"https://ops.meziani.org\"")
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            // uses default debug keystore
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
