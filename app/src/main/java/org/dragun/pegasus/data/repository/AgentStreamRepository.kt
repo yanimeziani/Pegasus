@@ -31,33 +31,40 @@ class AgentStreamRepository @Inject constructor(
 ) {
 
     fun streamAgentOutput(agentId: String): Flow<AgentStreamEvent> = callbackFlow {
-        val apiUrl = session.apiUrl.first() ?: return@callbackFlow
-
-        val request = Request.Builder()
-            .url("$apiUrl/agents/$agentId/stream")
-            .addHeader("Accept", "text/event-stream")
-            .addHeader("Cache-Control", "no-cache")
-            .build()
-
-        val client = okHttp.newBuilder()
-            .addInterceptor(authInterceptor)
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        if (!response.isSuccessful) {
-            trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}"))
+        val apiUrl = session.apiUrl.first()
+        
+        if (apiUrl.isNullOrBlank()) {
+            trySend(AgentStreamEvent.Error("API URL not configured"))
             close()
             return@callbackFlow
         }
 
-        trySend(AgentStreamEvent.Connected)
+        try {
+            val request = Request.Builder()
+                .url("$apiUrl/agents/$agentId/stream")
+                .addHeader("Accept", "text/event-stream")
+                .addHeader("Cache-Control", "no-cache")
+                .build()
 
-        val body = response.body ?: run {
-            trySend(AgentStreamEvent.Error("Empty response"))
-            close()
-            return@callbackFlow
-        }
+            val client = okHttp.newBuilder()
+                .addInterceptor(authInterceptor)
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (!response.isSuccessful) {
+                trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}"))
+                close()
+                return@callbackFlow
+            }
+
+            trySend(AgentStreamEvent.Connected)
+
+            val body = response.body ?: run {
+                trySend(AgentStreamEvent.Error("Empty response"))
+                close()
+                return@callbackFlow
+            }
 
         val buffer = StringBuilder()
         val source = body.source()

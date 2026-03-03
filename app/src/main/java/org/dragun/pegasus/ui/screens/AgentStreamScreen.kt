@@ -48,28 +48,32 @@ class AgentStreamViewModel @Inject constructor(
     private var streamJob: kotlinx.coroutines.Job? = null
 
     fun connect(agentId: String) {
-        _state.update { it.copy(agentId = agentId, lines = emptyList(), error = null) }
+        _state.update { it.copy(agentId = agentId, lines = emptyList(), error = null, status = "connecting") }
         
         streamJob?.cancel()
         streamJob = viewModelScope.launch {
-            streamRepo.streamAgentOutput(agentId).collect { event ->
-                when (event) {
-                    is AgentStreamEvent.Connected -> {
-                        _state.update { it.copy(connected = true, status = "connected") }
-                    }
-                    is AgentStreamEvent.Output -> {
-                        _state.update { it.copy(lines = it.lines + event.text) }
-                    }
-                    is AgentStreamEvent.Status -> {
-                        _state.update { it.copy(status = event.status) }
-                    }
-                    is AgentStreamEvent.Error -> {
-                        _state.update { it.copy(error = event.message, connected = false) }
-                    }
-                    is AgentStreamEvent.Disconnected -> {
-                        _state.update { it.copy(connected = false, status = "disconnected") }
+            try {
+                streamRepo.streamAgentOutput(agentId).collect { event ->
+                    when (event) {
+                        is AgentStreamEvent.Connected -> {
+                            _state.update { it.copy(connected = true, status = "connected") }
+                        }
+                        is AgentStreamEvent.Output -> {
+                            _state.update { it.copy(lines = it.lines + event.text) }
+                        }
+                        is AgentStreamEvent.Status -> {
+                            _state.update { it.copy(status = event.status) }
+                        }
+                        is AgentStreamEvent.Error -> {
+                            _state.update { it.copy(error = event.message, connected = false, status = "error") }
+                        }
+                        is AgentStreamEvent.Disconnected -> {
+                            _state.update { it.copy(connected = false, status = "disconnected") }
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message ?: "Unknown error", connected = false, status = "error") }
             }
         }
     }
