@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.dragun.pegasus.data.api.AuthInterceptor
 import org.dragun.pegasus.data.store.SessionStore
@@ -38,6 +39,8 @@ class AgentStreamRepository @Inject constructor(
             return@callbackFlow
         }
 
+        var response: Response? = null
+
         try {
             val request = Request.Builder()
                 .url("$apiUrl/agents/$agentId/stream")
@@ -49,7 +52,7 @@ class AgentStreamRepository @Inject constructor(
                 .addInterceptor(authInterceptor)
                 .build()
 
-            val response = client.newCall(request).execute()
+            response = client.newCall(request).execute()
 
             if (!response.isSuccessful) {
                 trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}"))
@@ -92,7 +95,7 @@ class AgentStreamRepository @Inject constructor(
         } catch (e: Exception) {
             trySend(AgentStreamEvent.Error("Stream error: ${e.message}"))
         } finally {
-            response.close()
+            response?.close()
         }
 
         awaitClose { }
