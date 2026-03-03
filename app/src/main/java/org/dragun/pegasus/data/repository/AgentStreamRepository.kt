@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import org.dragun.pegasus.data.api.AuthInterceptor
 import org.dragun.pegasus.data.store.SessionStore
 import javax.inject.Inject
@@ -55,7 +56,9 @@ class AgentStreamRepository @Inject constructor(
             response = client.newCall(request).execute()
 
             if (!response.isSuccessful) {
-                trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}"))
+                val errorBody = response.body?.string()?.take(300)
+                val suffix = if (errorBody.isNullOrBlank()) "" else " - $errorBody"
+                trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}$suffix"))
                 close()
                 return@callbackFlow
             }
@@ -83,17 +86,33 @@ class AgentStreamRepository @Inject constructor(
                                 trySend(AgentStreamEvent.Disconnected)
                             }
                             content.isNotEmpty() -> {
-                                trySend(AgentStreamEvent.Output(content))
+                                val parsed = parseSsePayload(content)
+                                when {
+                                    parsed == null -> trySend(AgentStreamEvent.Output(content))
+                                    parsed.kind == "heartbeat" -> {
+                                        // Ignore noisy heartbeat events.
+                                    }
+                                    parsed.kind.startsWith("agent.") -> {
+                                        trySend(AgentStreamEvent.Status(parsed.summary ?: parsed.kind))
+                                    }
+                                    else -> {
+                                        trySend(AgentStreamEvent.Output(parsed.summary ?: content))
+                                    }
+                                }
                             }
                         }
                     }
                     buffer.clear()
                 } else {
-                    buffer.append(line)
+                    if (line.startsWith("data: ")) {
+                        if (buffer.isNotEmpty()) buffer.append('\n')
+                        buffer.append(line)
+                    }
                 }
             }
         } catch (e: Exception) {
-            trySend(AgentStreamEvent.Error("Stream error: ${e.message}"))
+            val detail = e.message ?: e::class.java.simpleName
+            trySend(AgentStreamEvent.Error("Stream error: $detail"))
         } finally {
             response?.close()
         }
@@ -146,6 +165,21 @@ class AgentStreamRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private data class ParsedEvent(val kind: String, val summary: String?)
+
+    private fun parseSsePayload(raw: String): ParsedEvent? {
+        return try {
+            val json = JSONObject(raw)
+            ParsedEvent(
+                kind = json.optString("kind", "message"),
+                summary = json.optString("summary").takeIf { it.isNotBlank() }
+                    ?: json.optString("status").takeIf { it.isNotBlank() }
+            )
+        } catch (_: Exception) {
+            null
         }
     }
 }
