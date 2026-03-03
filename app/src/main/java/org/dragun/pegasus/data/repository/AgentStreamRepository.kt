@@ -91,11 +91,11 @@ class AgentStreamRepository @Inject constructor(
             }
         } catch (e: Exception) {
             trySend(AgentStreamEvent.Error("Stream error: ${e.message}"))
-        }
-
-        awaitClose {
+        } finally {
             response.close()
         }
+
+        awaitClose { }
     }
 
     suspend fun startAgent(agentId: String): Result<Unit> = withContext(Dispatchers.IO) {
