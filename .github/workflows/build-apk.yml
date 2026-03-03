@@ -61,19 +61,16 @@ jobs:
           ${{ runner.os }}-gradle-
           
     - name: Make gradlew executable
-      run: chmod +x ./pegasus/gradlew
+      run: chmod +x ./gradlew
       
     - name: Validate Gradle wrapper
       uses: gradle/wrapper-validation-action@v2
       
     - name: Run tests
-      run: |
-        cd pegasus
-        ./gradlew test --stacktrace
+      run: ./gradlew test --stacktrace
         
     - name: Build APK (${{ matrix.build_type }})
       run: |
-        cd pegasus
         if [ "${{ matrix.build_type }}" == "release" ]; then
           ./gradlew assembleRelease --stacktrace
         else
@@ -83,14 +80,13 @@ jobs:
     - name: Sign APK (Release only)
       if: matrix.build_type == 'release'
       run: |
-        cd pegasus
         echo "Signing release APK with debug keystore for demo purposes"
         # In production, use proper signing with secrets
         
     - name: Optimize APK (Release only)
       if: matrix.build_type == 'release'
       run: |
-        cd pegasus/app/build/outputs/apk/release
+        cd app/build/outputs/apk/release
         ls -la
         echo "APK size optimization results:"
         du -h *.apk
@@ -100,7 +96,7 @@ jobs:
       with:
         name: pegasus-${{ matrix.build_type }}-apk
         path: |
-          pegasus/app/build/outputs/apk/${{ matrix.build_type }}/*.apk
+          app/build/outputs/apk/${{ matrix.build_type }}/*.apk
         retention-days: 30
         
     - name: Upload mapping files (Release only)
@@ -109,7 +105,7 @@ jobs:
       with:
         name: pegasus-release-mapping
         path: |
-          pegasus/app/build/outputs/mapping/release/mapping.txt
+          app/build/outputs/mapping/release/mapping.txt
         retention-days: 90
         
   performance-test:
@@ -149,7 +145,6 @@ jobs:
       run: |
         echo "=== Performance Benchmark ==="
         echo "Liquid Glass Render Engine Performance Test"
-        cd pegasus
         ./gradlew :app:testReleaseUnitTest --tests="*RenderEngine*" --stacktrace || true
         
   create-release:
