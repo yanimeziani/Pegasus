@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.dragun.pegasus.BuildConfig
 import org.dragun.pegasus.data.api.AuthInterceptor
+import org.dragun.pegasus.data.api.BaseUrlInterceptor
 import org.dragun.pegasus.data.api.OpenClawApi
 import org.dragun.pegasus.data.ssh.SshClientWrapper
 import org.dragun.pegasus.data.store.SessionStore
@@ -29,8 +30,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOkHttp(authInterceptor: AuthInterceptor): OkHttpClient =
+    fun provideOkHttp(
+        baseUrlInterceptor: BaseUrlInterceptor,
+        authInterceptor: AuthInterceptor,
+    ): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor(baseUrlInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY

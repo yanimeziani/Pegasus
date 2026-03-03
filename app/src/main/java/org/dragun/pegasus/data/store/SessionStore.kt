@@ -31,6 +31,8 @@ class SessionStore @Inject constructor(
     val role: Flow<String?> = context.dataStore.data.map { it[KEY_ROLE] }
     val apiUrl: Flow<String?> = context.dataStore.data.map { it[KEY_API_URL] }
     val sshHost: Flow<String?> = context.dataStore.data.map { it[KEY_SSH_HOST] }
+    val sshPort: Flow<String?> = context.dataStore.data.map { it[KEY_SSH_PORT] }
+    val sshUser: Flow<String?> = context.dataStore.data.map { it[KEY_SSH_USER] }
 
     val isLoggedIn: Flow<Boolean> = token.map { !it.isNullOrBlank() }
 
