@@ -1,10 +1,12 @@
 package org.dragun.pegasus.data.repository
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -42,82 +44,87 @@ class AgentStreamRepository @Inject constructor(
 
         var response: Response? = null
 
-        try {
-            val request = Request.Builder()
-                .url("$apiUrl/agents/$agentId/stream")
-                .addHeader("Accept", "text/event-stream")
-                .addHeader("Cache-Control", "no-cache")
-                .build()
+        val streamJob: Job = launch(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("$apiUrl/agents/$agentId/stream")
+                    .addHeader("Accept", "text/event-stream")
+                    .addHeader("Cache-Control", "no-cache")
+                    .build()
 
-            val client = okHttp.newBuilder()
-                .addInterceptor(authInterceptor)
-                .build()
+                val client = okHttp.newBuilder()
+                    .addInterceptor(authInterceptor)
+                    .build()
 
-            response = client.newCall(request).execute()
+                response = client.newCall(request).execute()
 
-            if (!response.isSuccessful) {
-                val errorBody = response.body?.string()?.take(300)
-                val suffix = if (errorBody.isNullOrBlank()) "" else " - $errorBody"
-                trySend(AgentStreamEvent.Error("Failed to connect: ${response.code}$suffix"))
-                close()
-                return@callbackFlow
-            }
+                if (!response!!.isSuccessful) {
+                    val errorBody = response!!.body?.string()?.take(300)
+                    val suffix = if (errorBody.isNullOrBlank()) "" else " - $errorBody"
+                    trySend(AgentStreamEvent.Error("Failed to connect: ${response!!.code}$suffix"))
+                    close()
+                    return@launch
+                }
 
-            trySend(AgentStreamEvent.Connected)
+                trySend(AgentStreamEvent.Connected)
 
-            val body = response.body ?: run {
-                trySend(AgentStreamEvent.Error("Empty response"))
-                close()
-                return@callbackFlow
-            }
+                val body = response!!.body ?: run {
+                    trySend(AgentStreamEvent.Error("Empty response"))
+                    close()
+                    return@launch
+                }
 
-            val source = body.source()
-            val buffer = StringBuilder()
+                val source = body.source()
+                val buffer = StringBuilder()
 
-            while (true) {
-                val line = source.readUtf8Line() ?: break
+                while (true) {
+                    val line = source.readUtf8Line() ?: break
 
-                if (line.isEmpty()) {
-                    val data = buffer.toString()
-                    if (data.startsWith("data: ")) {
-                        val content = data.substring(6).trim()
-                        when {
-                            content == "DONE" -> {
-                                trySend(AgentStreamEvent.Disconnected)
-                            }
-                            content.isNotEmpty() -> {
-                                val parsed = parseSsePayload(content)
-                                when {
-                                    parsed == null -> trySend(AgentStreamEvent.Output(content))
-                                    parsed.kind == "heartbeat" -> {
-                                        // Ignore noisy heartbeat events.
-                                    }
-                                    parsed.kind.startsWith("agent.") -> {
-                                        trySend(AgentStreamEvent.Status(parsed.summary ?: parsed.kind))
-                                    }
-                                    else -> {
-                                        trySend(AgentStreamEvent.Output(parsed.summary ?: content))
+                    if (line.isEmpty()) {
+                        val data = buffer.toString()
+                        if (data.startsWith("data: ")) {
+                            val content = data.substring(6).trim()
+                            when {
+                                content == "DONE" -> {
+                                    trySend(AgentStreamEvent.Disconnected)
+                                }
+                                content.isNotEmpty() -> {
+                                    val parsed = parseSsePayload(content)
+                                    when {
+                                        parsed == null -> trySend(AgentStreamEvent.Output(content))
+                                        parsed.kind == "heartbeat" -> {
+                                            // Ignore noisy heartbeat events.
+                                        }
+                                        parsed.kind.startsWith("agent.") -> {
+                                            trySend(AgentStreamEvent.Status(parsed.summary ?: parsed.kind))
+                                        }
+                                        else -> {
+                                            trySend(AgentStreamEvent.Output(parsed.summary ?: content))
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    buffer.clear()
-                } else {
-                    if (line.startsWith("data: ")) {
-                        if (buffer.isNotEmpty()) buffer.append('\n')
-                        buffer.append(line)
+                        buffer.clear()
+                    } else {
+                        if (line.startsWith("data: ")) {
+                            if (buffer.isNotEmpty()) buffer.append('\n')
+                            buffer.append(line)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                val detail = e.message ?: e::class.java.simpleName
+                trySend(AgentStreamEvent.Error("Stream error: $detail"))
+            } finally {
+                response?.close()
             }
-        } catch (e: Exception) {
-            val detail = e.message ?: e::class.java.simpleName
-            trySend(AgentStreamEvent.Error("Stream error: $detail"))
-        } finally {
-            response?.close()
         }
 
-        awaitClose { }
+        awaitClose {
+            streamJob.cancel()
+            response?.close()
+        }
     }
 
     suspend fun startAgent(agentId: String): Result<Unit> = withContext(Dispatchers.IO) {
