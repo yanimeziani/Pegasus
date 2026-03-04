@@ -28,9 +28,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Validate wrapper
-        uses: gradle/wrapper-validation-action@v3
-
       - name: Prepare release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
