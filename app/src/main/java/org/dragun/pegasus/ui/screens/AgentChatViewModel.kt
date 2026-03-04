@@ -129,11 +129,18 @@ class AgentChatViewModel @Inject constructor(
                             }
                         }
                         is AgentStreamEvent.Status -> {
+                            // Show status updates as inline markers
+                            val marker = "[${event.status}]\n"
                             _state.update {
-                                it.copy(pendingAssistantText = it.pendingAssistantText + "\n[" + event.status + "]")
+                                it.copy(pendingAssistantText = it.pendingAssistantText + marker)
                             }
                         }
-                        is AgentStreamEvent.Connected -> { }
+                        is AgentStreamEvent.Connected -> {
+                            // Show a brief connected indicator in pending text
+                            _state.update {
+                                it.copy(pendingAssistantText = it.pendingAssistantText + "[Connected to stream]\n")
+                            }
+                        }
                         is AgentStreamEvent.Error -> {
                             _state.update {
                                 it.copy(

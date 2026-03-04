@@ -24,7 +24,7 @@ data class DashboardState(
     val costs: CostStatus? = null,
     val hitlCount: Int = 0,
     val panicActive: Boolean = false,
-    val loading: Boolean = true,
+    val loading: Boolean = false,
     val error: String? = null,
     val username: String = "",
     val messageAgentId: String? = null,

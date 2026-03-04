@@ -33,6 +33,11 @@ class AgentStreamRepository @Inject constructor(
     private val authInterceptor: AuthInterceptor,
 ) {
 
+    companion object {
+        /** Auto-disconnect after this many ms of only heartbeats following real output. */
+        private const val IDLE_TIMEOUT_MS = 10_000L
+    }
+
     fun streamAgentOutput(agentId: String): Flow<AgentStreamEvent> = callbackFlow {
         val apiUrl = session.apiUrl.first()
         
@@ -76,6 +81,8 @@ class AgentStreamRepository @Inject constructor(
 
                 val source = body.source()
                 val buffer = StringBuilder()
+                var lastRealEventTime = System.currentTimeMillis()
+                var hasReceivedOutput = false
 
                 while (true) {
                     val line = source.readUtf8Line() ?: break
@@ -91,14 +98,33 @@ class AgentStreamRepository @Inject constructor(
                                 content.isNotEmpty() -> {
                                     val parsed = parseSsePayload(content)
                                     when {
-                                        parsed == null -> trySend(AgentStreamEvent.Output(content))
+                                        parsed == null -> {
+                                            lastRealEventTime = System.currentTimeMillis()
+                                            hasReceivedOutput = true
+                                            trySend(AgentStreamEvent.Output(content))
+                                        }
                                         parsed.kind == "heartbeat" -> {
                                             // Ignore noisy heartbeat events.
+                                            // If we got real output and heartbeats have been idle
+                                            // for IDLE_TIMEOUT_MS, treat stream as complete.
+                                            if (hasReceivedOutput &&
+                                                System.currentTimeMillis() - lastRealEventTime > IDLE_TIMEOUT_MS
+                                            ) {
+                                                trySend(AgentStreamEvent.Disconnected)
+                                                break
+                                            }
                                         }
                                         parsed.kind.startsWith("agent.") -> {
+                                            lastRealEventTime = System.currentTimeMillis()
+                                            trySend(AgentStreamEvent.Status(parsed.summary ?: parsed.kind))
+                                        }
+                                        parsed.kind.startsWith("task.") -> {
+                                            lastRealEventTime = System.currentTimeMillis()
                                             trySend(AgentStreamEvent.Status(parsed.summary ?: parsed.kind))
                                         }
                                         else -> {
+                                            lastRealEventTime = System.currentTimeMillis()
+                                            hasReceivedOutput = true
                                             trySend(AgentStreamEvent.Output(parsed.summary ?: content))
                                         }
                                     }
