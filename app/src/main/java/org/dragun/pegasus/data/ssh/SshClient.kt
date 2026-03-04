@@ -39,8 +39,8 @@ class SshClientWrapper @Inject constructor() : Closeable {
         try {
             val cmd = session.exec(command)
             cmd.join(timeoutSec, TimeUnit.SECONDS)
-            val stdout = IOUtils.readFully(cmd.inputStream).toString(Charsets.UTF_8)
-            val stderr = IOUtils.readFully(cmd.errorStream).toString(Charsets.UTF_8)
+            val stdout = String(IOUtils.readFully(cmd.inputStream).toByteArray(), Charsets.UTF_8)
+            val stderr = String(IOUtils.readFully(cmd.errorStream).toByteArray(), Charsets.UTF_8)
             SshResult(cmd.exitStatus ?: -1, stdout.trim(), stderr.trim())
         } finally {
             session.close()
