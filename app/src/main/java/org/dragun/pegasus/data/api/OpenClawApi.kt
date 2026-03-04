@@ -21,6 +21,9 @@ interface OpenClawApi {
     @GET("agents")
     suspend fun agents(): Response<Map<String, AgentInfo>>
 
+    @GET("agents/primary")
+    suspend fun primaryAgent(): Response<PrimaryAgentResponse>
+
     @POST("agents/{agent_id}/start")
     suspend fun startAgent(@Path("agent_id") agentId: String): Response<AgentControlResult>
 

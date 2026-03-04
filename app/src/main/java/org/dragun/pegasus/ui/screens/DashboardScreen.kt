@@ -141,14 +141,23 @@ fun DashboardScreen(
             }
 
             SectionHeader("Agents")
-            state.agents.forEach { (id, info) ->
-                AgentCard(
-                    id = id,
-                    info = info,
-                    onClick = { onNavigate("${Routes.AGENT_STREAM}/$id") },
-                    onStart = { viewModel.startAgent(id) },
-                    onStop = { viewModel.stopAgent(id) },
-                )
+            val orderedAgentIds = if (state.primaryAgentId != null) {
+                listOf(state.primaryAgentId!!) + state.agents.keys.filter { it != state.primaryAgentId }
+            } else {
+                state.agents.keys.toList()
+            }
+            orderedAgentIds.forEach { id ->
+                state.agents[id]?.let { info ->
+                    AgentCard(
+                        id = id,
+                        info = info,
+                        isPrimary = id == state.primaryAgentId,
+                        onClick = { onNavigate("${Routes.AGENT_STREAM}/$id") },
+                        onMessage = { viewModel.openMessageAgent(id) },
+                        onStart = { viewModel.startAgent(id) },
+                        onStop = { viewModel.stopAgent(id) },
+                    )
+                }
             }
             if (state.agents.isEmpty() && !state.loading) {
                 GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -214,6 +223,41 @@ fun DashboardScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+
+        state.messageAgentId?.let { agentId ->
+            var messageText by remember(agentId) { mutableStateOf("") }
+            AlertDialog(
+                onDismissRequest = viewModel::closeMessageAgent,
+                title = { Text("Message agent: $agentId") },
+                text = {
+                    OutlinedTextField(
+                        value = messageText,
+                        onValueChange = { messageText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("What should the agent do?") },
+                        minLines = 2,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (messageText.isNotBlank()) {
+                                viewModel.submitTask(agentId, messageText.trim()) {
+                                    viewModel.closeMessageAgent()
+                                }
+                            }
+                        },
+                    ) {
+                        Text("Send")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = viewModel::closeMessageAgent) {
+                        Text("Cancel")
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -268,7 +312,9 @@ private fun StatusCard(title: String, status: String, subtitle: String) {
 private fun AgentCard(
     id: String,
     info: AgentInfo,
+    isPrimary: Boolean = false,
     onClick: () -> Unit,
+    onMessage: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
 ) {
@@ -306,7 +352,24 @@ private fun AgentCard(
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text(id, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(id, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                    if (isPrimary) {
+                        Spacer(Modifier.width(6.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            shape = MaterialTheme.shapes.small,
+                        ) {
+                            Text(
+                                "Main",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
                 Text(
                     info.current_task ?: "No active task",
                     style = MaterialTheme.typography.bodySmall,
@@ -333,6 +396,15 @@ private fun AgentCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
+            GlassButton(
+                onClick = onMessage,
+                cornerRadius = 10.dp,
+            ) {
+                Icon(Icons.Default.Send, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Message", style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(Modifier.width(8.dp))
             if (info.status == "running") {
                 GlassButton(
                     onClick = onStop,

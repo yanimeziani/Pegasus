@@ -21,6 +21,8 @@ data class AgentInfo(
     val status: String?,
 )
 
+data class PrimaryAgentResponse(val primary_agent_id: String?)
+
 data class AgentControlResult(
     val success: Boolean,
     val agent_id: String,
