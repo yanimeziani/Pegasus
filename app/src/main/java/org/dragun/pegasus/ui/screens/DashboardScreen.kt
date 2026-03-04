@@ -1,5 +1,10 @@
 package org.dragun.pegasus.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,7 +32,6 @@ fun DashboardScreen(
     onLogout: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
-    val glassColors = org.dragun.pegasus.ui.theme.LiquidGlassPalette.glassColors
 
     Box(
         modifier = Modifier
@@ -61,7 +65,7 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            "OpenClaw · ${state.username}",
+                            "Cerberus · ${state.username}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -80,7 +84,11 @@ fun DashboardScreen(
                 },
             )
 
-            if (state.panicActive) {
+            AnimatedVisibility(
+                visible = state.panicActive,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
+            ) {
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     cornerRadius = 16.dp,
@@ -119,15 +127,21 @@ fun DashboardScreen(
                 }
             }
 
-            state.error?.let {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    cornerRadius = 16.dp,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(Modifier.width(8.dp))
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            AnimatedVisibility(
+                visible = state.error != null,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 3 }),
+                exit = fadeOut(),
+            ) {
+                state.error?.let {
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        cornerRadius = 16.dp,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.error)
+                            Spacer(Modifier.width(8.dp))
+                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
@@ -153,6 +167,7 @@ fun DashboardScreen(
                         info = info,
                         isPrimary = id == state.primaryAgentId,
                         onClick = { onNavigate("${Routes.AGENT_STREAM}/$id") },
+                        onChat = { onNavigate("${Routes.AGENT_CHAT}/$id") },
                         onMessage = { viewModel.openMessageAgent(id) },
                         onStart = { viewModel.startAgent(id) },
                         onStop = { viewModel.stopAgent(id) },
@@ -314,6 +329,7 @@ private fun AgentCard(
     info: AgentInfo,
     isPrimary: Boolean = false,
     onClick: () -> Unit,
+    onChat: () -> Unit,
     onMessage: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
@@ -396,6 +412,15 @@ private fun AgentCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
+            GlassButton(
+                onClick = onChat,
+                cornerRadius = 10.dp,
+            ) {
+                Icon(Icons.Default.Message, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Chat", style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(Modifier.width(8.dp))
             GlassButton(
                 onClick = onMessage,
                 cornerRadius = 10.dp,

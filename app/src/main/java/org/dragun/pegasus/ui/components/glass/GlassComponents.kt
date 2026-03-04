@@ -35,7 +35,7 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val glassColors = LiquidGlassPalette.glassColors
+    val surfaceTokens = LiquidGlassPalette.surfaceTokens
     val shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -57,17 +57,17 @@ fun GlassCard(
             scaleX = scale
             scaleY = scale
         }
-        .shadow(elevation, shape, ambientColor = glassColors.glassShadow, spotColor = glassColors.glassShadow)
+        .shadow(elevation, shape, ambientColor = surfaceTokens.glow, spotColor = surfaceTokens.glow)
         .clip(shape)
         .background(
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    glassColors.glassSurface.copy(alpha = surfaceAlpha + 0.1f),
-                    glassColors.glassSurface.copy(alpha = surfaceAlpha),
+                    surfaceTokens.cardStart.copy(alpha = surfaceAlpha + 0.1f),
+                    surfaceTokens.cardEnd.copy(alpha = surfaceAlpha),
                 )
             )
         )
-        .border(borderWidth, glassColors.glassBorder, shape)
+        .border(borderWidth, surfaceTokens.outline, shape)
         .then(
             if (onClick != null) {
                 Modifier.clickable(
@@ -92,7 +92,6 @@ fun GlassButton(
     cornerRadius: Dp = 14.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val glassColors = LiquidGlassPalette.glassColors
     val primaryColor = MaterialTheme.colorScheme.primary
     val shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
@@ -156,7 +155,7 @@ fun GlassTextField(
     singleLine: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
-    val glassColors = LiquidGlassPalette.glassColors
+    val surfaceTokens = LiquidGlassPalette.surfaceTokens
     val shape = RoundedCornerShape(12.dp)
     
     val backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -167,7 +166,7 @@ fun GlassTextField(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor)
-            .border(1.dp, glassColors.glassBorder, shape),
+            .border(1.dp, surfaceTokens.outline.copy(alpha = 0.5f), shape),
         placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
@@ -192,7 +191,7 @@ fun GlassSurface(
     cornerRadius: Dp = 24.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val glassColors = LiquidGlassPalette.glassColors
+    val surfaceTokens = LiquidGlassPalette.surfaceTokens
     val shape = RoundedCornerShape(cornerRadius)
     
     Box(
@@ -201,12 +200,12 @@ fun GlassSurface(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        glassColors.glassSurface.copy(alpha = 0.08f),
-                        glassColors.glassSurface.copy(alpha = 0.03f),
+                        surfaceTokens.cardStart.copy(alpha = 0.28f),
+                        surfaceTokens.cardEnd.copy(alpha = 0.2f),
                     )
                 )
             )
-            .border(0.5.dp, glassColors.glassBorder.copy(alpha = 0.3f), shape),
+            .border(0.5.dp, surfaceTokens.outline.copy(alpha = 0.4f), shape),
         content = content
     )
 }
@@ -218,8 +217,6 @@ fun GlassTopBar(
     navigationIcon: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val glassColors = LiquidGlassPalette.glassColors
-    
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),

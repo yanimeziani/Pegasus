@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.dragun.pegasus.data.api.OpenClawApi
+import org.dragun.pegasus.data.api.CerberusApi
 import org.dragun.pegasus.domain.model.HitlItem
 import javax.inject.Inject
 
@@ -33,7 +33,7 @@ data class HitlState(
 )
 
 @HiltViewModel
-class HitlViewModel @Inject constructor(private val api: OpenClawApi) : ViewModel() {
+class HitlViewModel @Inject constructor(private val api: CerberusApi) : ViewModel() {
     private val _state = MutableStateFlow(HitlState())
     val state: StateFlow<HitlState> = _state.asStateFlow()
 

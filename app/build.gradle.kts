@@ -14,14 +14,14 @@ android {
         applicationId = "org.dragun.pegasus"
         minSdk = 28
         targetSdk = 36
-        versionCode = 14
-        versionName = "0.3.2"
+        versionCode = 15
+        versionName = "0.4.0"
 
         ndk {
             abiFilters += "arm64-v8a"
         }
 
-        buildConfigField("String", "DEFAULT_API_URL", "\"https://pegasus.meziani.org\"")
+        buildConfigField("String", "DEFAULT_API_URL", "\"https://api.pegasus.meziani.org\"")
     }
 
     signingConfigs {
@@ -37,14 +37,14 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
             
-            // Enhanced optimization for liquid glass render engine
+            // Enhanced optimization for Material motion rendering
             ndk {
                 debugSymbolLevel = "NONE"
             }
             
             // Enable R8 full mode for maximum optimization
-            buildConfigField("boolean", "ENABLE_RENDER_ENGINE_DEBUG", "false")
-            buildConfigField("boolean", "ENABLE_GLASS_ANIMATIONS", "true")
+            buildConfigField("boolean", "ENABLE_MOTION_DEBUG", "false")
+            buildConfigField("boolean", "ENABLE_MATERIAL_ANIMATIONS", "true")
             buildConfigField("boolean", "ENABLE_HAPTIC_FEEDBACK", "true")
         }
         
@@ -53,8 +53,8 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             
-            buildConfigField("boolean", "ENABLE_RENDER_ENGINE_DEBUG", "true")
-            buildConfigField("boolean", "ENABLE_GLASS_ANIMATIONS", "true")
+            buildConfigField("boolean", "ENABLE_MOTION_DEBUG", "true")
+            buildConfigField("boolean", "ENABLE_MATERIAL_ANIMATIONS", "true")
             buildConfigField("boolean", "ENABLE_HAPTIC_FEEDBACK", "true")
         }
     }
@@ -67,7 +67,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         
-        // Enable Compose optimizations for liquid glass effects
+        // Enable Compose optimizations for motion and transitions
         freeCompilerArgs += listOf(
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
             "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",

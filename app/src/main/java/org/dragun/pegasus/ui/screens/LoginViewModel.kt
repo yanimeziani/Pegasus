@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.dragun.pegasus.data.api.OpenClawApi
+import org.dragun.pegasus.data.api.CerberusApi
 import org.dragun.pegasus.data.store.SessionStore
 import org.dragun.pegasus.domain.model.LoginRequest
 import javax.inject.Inject
@@ -20,7 +20,7 @@ data class LoginUiState(
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val api: OpenClawApi,
+    private val api: CerberusApi,
     private val session: SessionStore,
 ) : ViewModel() {
 

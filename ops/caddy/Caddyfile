@@ -1,0 +1,9 @@
+pegasus.meziani.org {
+  encode zstd gzip
+  reverse_proxy pegasus-web:8080
+}
+
+api.pegasus.meziani.org {
+  encode zstd gzip
+  reverse_proxy pegasus-api:8000
+}

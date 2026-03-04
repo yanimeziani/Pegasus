@@ -82,3 +82,20 @@ data class ServerConfig(
     val sshPort: Int = 22,
     val sshUser: String = "root",
 )
+
+/** Chat message for agent chat UI. */
+data class ChatMessage(
+    val id: String,
+    val role: ChatRole,
+    val text: String,
+    val attachmentLabel: String? = null,
+)
+
+enum class ChatRole { USER, ASSISTANT }
+
+/** Skill / task type for agent chat. */
+data class ChatSkill(
+    val id: String,
+    val label: String,
+    val priority: String,
+)

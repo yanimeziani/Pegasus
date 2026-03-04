@@ -11,7 +11,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.dragun.pegasus.BuildConfig
 import org.dragun.pegasus.data.api.AuthInterceptor
 import org.dragun.pegasus.data.api.BaseUrlInterceptor
-import org.dragun.pegasus.data.api.OpenClawApi
+import org.dragun.pegasus.data.api.CerberusApi
 import org.dragun.pegasus.data.ssh.SshClientWrapper
 import org.dragun.pegasus.data.store.SessionStore
 import retrofit2.Retrofit
@@ -56,8 +56,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOpenClawApi(retrofit: Retrofit): OpenClawApi =
-        retrofit.create(OpenClawApi::class.java)
+    fun provideCerberusApi(retrofit: Retrofit): CerberusApi =
+        retrofit.create(CerberusApi::class.java)
 
     @Provides
     @Singleton

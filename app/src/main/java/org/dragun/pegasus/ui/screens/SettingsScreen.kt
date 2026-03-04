@@ -89,7 +89,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel(), onBack: () ->
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("OpenClaw API", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("Cerberus API", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = state.apiUrl,
                 onValueChange = viewModel::updateApiUrl,
@@ -144,12 +144,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel(), onBack: () ->
 
             Spacer(Modifier.height(32.dp))
             Text(
-                "Pegasus v0.1.0-alpha",
+                "Pegasus v0.4.0",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "dragun.app / OpenClaw",
+                "pegasus / cerberus",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -21,12 +21,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.dragun.pegasus.data.api.OpenClawApi
+import org.dragun.pegasus.data.api.CerberusApi
 import org.dragun.pegasus.domain.model.CostStatus
 import javax.inject.Inject
 
 @HiltViewModel
-class CostsViewModel @Inject constructor(private val api: OpenClawApi) : ViewModel() {
+class CostsViewModel @Inject constructor(private val api: CerberusApi) : ViewModel() {
     private val _state = MutableStateFlow<CostStatus?>(null)
     val state: StateFlow<CostStatus?> = _state.asStateFlow()
 

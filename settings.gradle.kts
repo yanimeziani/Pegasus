@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Pegasus"
 include(":app")
+include(":web")

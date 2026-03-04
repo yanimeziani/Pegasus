@@ -4,7 +4,7 @@ import org.dragun.pegasus.domain.model.*
 import retrofit2.Response
 import retrofit2.http.*
 
-interface OpenClawApi {
+interface CerberusApi {
 
     // Auth
     @POST("auth/login")

@@ -9,7 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.dragun.pegasus.data.api.OpenClawApi
+import org.dragun.pegasus.data.api.CerberusApi
 import org.dragun.pegasus.data.store.SessionStore
 import org.dragun.pegasus.domain.model.AgentInfo
 import org.dragun.pegasus.domain.model.CostStatus
@@ -32,7 +32,7 @@ data class DashboardState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val api: OpenClawApi,
+    private val api: CerberusApi,
     private val session: SessionStore,
 ) : ViewModel() {
 

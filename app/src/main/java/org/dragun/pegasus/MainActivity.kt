@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import org.dragun.pegasus.ui.PegasusNavHost
-import org.dragun.pegasus.ui.theme.LiquidGlassTheme
+import org.dragun.pegasus.ui.theme.PegasusMaterialTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LiquidGlassTheme {
+            PegasusMaterialTheme {
                 PegasusNavHost()
             }
         }

@@ -44,12 +44,12 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: "Pegasus ${{ env.VERSION }}"
           body: |
-            ## Pegasus ${{ env.VERSION }} — OpenClaw Mobile Control Plane
+            ## Pegasus ${{ env.VERSION }} — Cerberus Mission Control
 
             Release APK targeting **Android 16 (API 36) / arm64-v8a (aarch64)**.
 
             ### Features
-            - Login with OpenClaw API credentials
+            - Login with Cerberus API credentials
             - Dashboard: agent status, health, cost tracking
             - HITL approval queue with diff preview
             - Cost monitoring per agent

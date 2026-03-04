@@ -17,6 +17,7 @@ object Routes {
     const val TERMINAL = "terminal"
     const val SETTINGS = "settings"
     const val AGENT_STREAM = "agent_stream"
+    const val AGENT_CHAT = "agent_chat"
 }
 
 @Composable
@@ -63,6 +64,13 @@ fun PegasusNavHost() {
         composable(Routes.AGENT_STREAM + "/{agentId}") { backStackEntry ->
             val agentId = backStackEntry.arguments?.getString("agentId") ?: ""
             AgentStreamScreen(
+                agentId = agentId,
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.AGENT_CHAT + "/{agentId}") { backStackEntry ->
+            val agentId = backStackEntry.arguments?.getString("agentId") ?: ""
+            AgentChatScreen(
                 agentId = agentId,
                 onBack = { navController.popBackStack() },
             )

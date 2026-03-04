@@ -1,5 +1,10 @@
 package org.dragun.pegasus.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -70,7 +75,7 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "OpenClaw Control Plane",
+                        text = "Cerberus Control Plane",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -114,9 +119,15 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    state.error?.let {
-                        Spacer(Modifier.height(12.dp))
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    AnimatedVisibility(
+                        visible = state.error != null,
+                        enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
+                        exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
+                    ) {
+                        state.error?.let {
+                            Spacer(Modifier.height(12.dp))
+                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
 
                     Spacer(Modifier.height(24.dp))
