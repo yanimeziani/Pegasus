@@ -115,6 +115,13 @@ pegasus/
    - `pegasus.meziani.org` -> VPS IP
    - `api.pegasus.meziani.org` -> VPS IP
 
+## Production Checklist
+
+- Rotate `PEGASUS_ADMIN_PASSWORD` in `ops/deploy/.env` (never keep defaults)
+- Configure Android signing secrets in GitHub (see `RELEASE_APK.md`)
+- Ensure `Android CI` passes (`lint` + `testDebugUnitTest`) before tagging
+- Create signed release via tag (`v*`) using the `Android Release` workflow
+
 ## License
 
 Apache-2.0

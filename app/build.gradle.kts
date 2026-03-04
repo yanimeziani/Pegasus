@@ -6,6 +6,21 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val releaseKeystorePath = providers.gradleProperty("PEGASUS_RELEASE_STORE_FILE")
+    .orElse(providers.environmentVariable("PEGASUS_RELEASE_STORE_FILE"))
+val releaseKeystorePassword = providers.gradleProperty("PEGASUS_RELEASE_STORE_PASSWORD")
+    .orElse(providers.environmentVariable("PEGASUS_RELEASE_STORE_PASSWORD"))
+val releaseKeyAlias = providers.gradleProperty("PEGASUS_RELEASE_KEY_ALIAS")
+    .orElse(providers.environmentVariable("PEGASUS_RELEASE_KEY_ALIAS"))
+val releaseKeyPassword = providers.gradleProperty("PEGASUS_RELEASE_KEY_PASSWORD")
+    .orElse(providers.environmentVariable("PEGASUS_RELEASE_KEY_PASSWORD"))
+
+val hasReleaseSigning =
+    releaseKeystorePath.isPresent &&
+        releaseKeystorePassword.isPresent &&
+        releaseKeyAlias.isPresent &&
+        releaseKeyPassword.isPresent
+
 android {
     namespace = "org.dragun.pegasus"
     compileSdk = 36
@@ -28,6 +43,15 @@ android {
         getByName("debug") {
             // uses default debug keystore
         }
+
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseKeystorePath.get())
+                storePassword = releaseKeystorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
     }
 
     buildTypes {
@@ -35,7 +59,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             
             // Enhanced optimization for Material motion rendering
             ndk {
@@ -95,6 +123,16 @@ android {
     }
 }
 
+tasks.register("verifyReleaseSigning") {
+    group = "verification"
+    description = "Fails if release signing config is missing"
+    doLast {
+        check(hasReleaseSigning) {
+            "Release signing credentials are missing. Set PEGASUS_RELEASE_STORE_FILE, PEGASUS_RELEASE_STORE_PASSWORD, PEGASUS_RELEASE_KEY_ALIAS, PEGASUS_RELEASE_KEY_PASSWORD."
+        }
+    }
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -121,4 +159,6 @@ dependencies {
 
     implementation(libs.datastore)
     implementation(libs.coroutines)
+
+    testImplementation(libs.junit4)
 }
